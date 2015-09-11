@@ -2,9 +2,11 @@ from socket import *
 from tkinter import *
 from threading import *
 from bf import BF
-import atexit
+from help import Help
 import time
 import random
+
+hlp = Help()
 
 class Window(Frame):
     def __init__(self, master = None, conn = None):
@@ -121,10 +123,18 @@ class WorkerThread(Thread):
                         self.connectivity.SendMessage("Hi, %s!" % (sender), self.connectivity.Channel)
                 except:
                     self.connectivity.SendMessage("Hi, %s!" % (sender), self.connectivity.Channel)
-            elif cmd == "help":
-                hlp = ["Commands -> hi","         -> help","         -> bf","         -> *unlambda","         -> *ul","Note:       Commands with * is planned to implement."]
-                for h in hlp:
-                    self.connectivity.SendMessage(h, self.connectivity.Channel)
+            elif cmd.split(" ")[0] == "help":
+                try:
+                    hlp = Help()
+                    tp = cmd.split(" ")[1]
+                    print("Topic %s"%tp)
+                    outp = hlp.requestHelp(tp)
+                    for ln in outp:
+                        self.connectivity.SendMessage(ln, self.connectivity.Channel)
+                except:
+                    outp = hlp.requestTopics()
+                    self.connectivity.SendMessage(outp, self.connectivity.Channel)
+
             elif cmd.split(" ")[0] == "bf":
                 cmdpt = "".join(cmd.split(" ")[1:])
                 bfe = BF(False, True)
@@ -146,14 +156,14 @@ class WorkerThread(Thread):
         self.master.RichTextBox1.insert(END, data)
         self.master.rest()
         if data.startswith(":"):
-            try:
+            #try:
                 if data[1:].split(" :")[0].split(" ")[1] == "PRIVMSG":
                     if data[1:].split(" :")[0].split(" ")[2] == "VirgoIrcB":
                         self.privmsg(data[1:].split(" :")[0].split(" ")[0].split("!")[0], data[1:].split(" :")[1], "")
                     else:
                         self.privmsg(data[1:].split(" :")[0].split(" ")[0].split("!")[0], data[1:].split(" :")[1], data[1:].split(" :")[0].split(" ")[2])
-            except:
-                print("Exception :/")
+            #except:
+            #    print("Exception :/")
         elif data.startswith("PING :"):
             self.connectivity.Tcp.send( bytes("PONG :" + data.split(" :")[1] + "\r\n", "utf-8") )
             print("Pong!")
