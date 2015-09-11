@@ -113,8 +113,8 @@ class WorkerThread(Thread):
         print(sender)
         print(content)
         print(where)
-        if content.startswith("&"): # command.
-            cmd = content[1:] # strip the &.
+        if content.startswith("="): # command.
+            cmd = content[1:] # strip the =.
             if cmd.split(" ")[0] == "join":
                 self.connectivity.Tcp.send( bytes("PART " +self.connectivity.Channel+ (" :Changing channel to '%s'."%cmd.split(" ")[1])+"\r\n", "utf-8") )
                 self.connectivity.Channel = content[1:].split(" ")[1] #= cmd.split(" ")[1]
