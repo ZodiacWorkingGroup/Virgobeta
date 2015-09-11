@@ -175,7 +175,7 @@ class WorkerThread(Thread):
                         self.connectivity.SendMessage("-> %s" % sresults[s], self.connectivity.Channel)
                 except:
                     self.connectivity.SendMessage("-> %s" % "Googling error.", self.connectivity.Channel)
-            elif cmd in ['addpoll', 'votefor', 'delpoll']
+            elif cmd in ['addpoll', 'votefor', 'delpoll']:
                 if cmd == 'addpoll':
                     ps.addpoll(cmd.split(" ")[1], cmd.split(" ")[2:])
                 elif cmd == 'votefor':
