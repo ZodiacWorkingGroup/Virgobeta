@@ -3,6 +3,7 @@ from tkinter import *
 from threading import *
 from bf import BF
 from help import Help
+from pygoogle import pygoogle
 import time
 import random
 
@@ -118,7 +119,14 @@ class WorkerThread(Thread):
             if cmd.split(" ")[0] == "join":
                 self.connectivity.Tcp.send( bytes("PART " +self.connectivity.Channel+ (" :Changing channel to '%s'."%cmd.split(" ")[1])+"\r\n", "utf-8") )
                 self.connectivity.Channel = content[1:].split(" ")[1] #= cmd.split(" ")[1]
+                self.connectivity.Channels = [self.connectivity.Channel]
                 self.connectivity.Tcp.send( bytes("JOIN "+self.connectivity.Channel+"\r\n", "utf-8") )
+            elif cmd.split(" ")[0] == "joinst":
+                self.connectivity.Channels.append(cmd.split(" ")[1])
+                self.connectivity.Tcp.send( bytes("JOIN "+cmd.split(" ")[1]+"\r\n", "utf-8") )
+            elif cmd.split(" ")[0] == "leave":
+                self.connectivity.Channels.remove(cmd.split(" ")[1])
+                self.connectivity.Tcp.send( bytes("PART " +cmd.split(" ")[1]+ (" :Leaving from '%s'..."%cmd.split(" ")[1])+"\r\n", "utf-8") )
             elif cmd.split(" ")[0] == "hi" or cmd == "hi":
                 try:
                     if cmd.split(" ") != "":
@@ -140,6 +148,7 @@ class WorkerThread(Thread):
                     self.connectivity.SendMessage(outp, self.connectivity.Channel)
 
             elif cmd.split(" ")[0] == "bf":
+                # bf module
                 cmdpt = "".join(cmd.split(" ")[1:])
                 bfe = BF(False, True)
                 outpst = ""
@@ -151,7 +160,17 @@ class WorkerThread(Thread):
                     outpst = "Loop protection. "
                 outpst = outpst.replace("\n"," \\ ")
                 self.connectivity.SendMessage("-> %s" % outpst, self.connectivity.Channel)
-                
+
+            elif cmd.split(" ")[0] == "google":
+                # pygoogle module
+                try:
+                    query = " ".join(cmd.split(" ")[1:])
+                    pg = pygoogle(query, 1)
+                    sresults = pg.search()
+                    for s in sresults[:2]:
+                        self.connectivity.SendMessage("-> %s" % sresults[s], self.connectivity.Channel)
+                except:
+                    self.connectivity.SendMessage("-> %s" % "Googling error.", self.connectivity.Channel)
             else:
                 self.connectivity.SendMessage("%s is not implemented. Sorry." % cmd.split(" ")[0], self.connectivity.Channel)
         else:

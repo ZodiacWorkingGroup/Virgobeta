@@ -1,2 +1,3 @@
 0.0: Initial upload.
 0.1: Added help module.
+0.2: Added pygoogle module (ported to python 3).
