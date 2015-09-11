@@ -2,6 +2,7 @@ from socket import *
 from tkinter import *
 from threading import *
 from bf import BF
+from poll import *
 from help import Help
 from pygoogle import pygoogle
 import time
@@ -9,6 +10,7 @@ import random
 
 # The help module
 hlp = Help()
+ps = PollingSystem
 
 class Window(Frame):
     def __init__(self, master = None, conn = None): # conn is connection object.
@@ -115,19 +117,21 @@ class WorkerThread(Thread):
         print(content)
         print(where)
         if content.startswith("="): # command.
-            cmd = content[1:] # strip the =.
-            if cmd.split(" ")[0] == "join":
+            fullcmd = content[1:] # strip the =.
+            cmd = fullcmd.split(" ")[0]
+            args = fullcmd.split(" ")[1:]
+            if cmd == "join":
                 self.connectivity.Tcp.send( bytes("PART " +self.connectivity.Channel+ (" :Changing channel to '%s'."%cmd.split(" ")[1])+"\r\n", "utf-8") )
                 self.connectivity.Channel = content[1:].split(" ")[1] #= cmd.split(" ")[1]
                 self.connectivity.Channels = [self.connectivity.Channel]
                 self.connectivity.Tcp.send( bytes("JOIN "+self.connectivity.Channel+"\r\n", "utf-8") )
-            elif cmd.split(" ")[0] == "joinst":
+            elif cmd == "joinst":
                 self.connectivity.Channels.append(cmd.split(" ")[1])
                 self.connectivity.Tcp.send( bytes("JOIN "+cmd.split(" ")[1]+"\r\n", "utf-8") )
-            elif cmd.split(" ")[0] == "leave":
+            elif cmd == "leave":
                 self.connectivity.Channels.remove(cmd.split(" ")[1])
                 self.connectivity.Tcp.send( bytes("PART " +cmd.split(" ")[1]+ (" :Leaving from '%s'..."%cmd.split(" ")[1])+"\r\n", "utf-8") )
-            elif cmd.split(" ")[0] == "hi" or cmd == "hi":
+            elif cmd == "hi" or cmd == "hi":
                 try:
                     if cmd.split(" ") != "":
                         self.connectivity.SendMessage("Hi, %s! (from %s)" % (cmd.split(" ")[1],sender), self.connectivity.Channel)
@@ -135,7 +139,7 @@ class WorkerThread(Thread):
                         self.connectivity.SendMessage("Hi, %s!" % (sender), self.connectivity.Channel)
                 except:
                     self.connectivity.SendMessage("Hi, %s!" % (sender), self.connectivity.Channel)
-            elif cmd.split(" ")[0] == "help":
+            elif cmd == "help":
                 try:
                     hlp = Help()
                     tp = cmd.split(" ")[1]
@@ -147,7 +151,7 @@ class WorkerThread(Thread):
                     outp = hlp.requestTopics()
                     self.connectivity.SendMessage(outp, self.connectivity.Channel)
 
-            elif cmd.split(" ")[0] == "bf":
+            elif cmd == "bf":
                 # bf module
                 cmdpt = "".join(cmd.split(" ")[1:])
                 bfe = BF(False, True)
@@ -161,7 +165,7 @@ class WorkerThread(Thread):
                 outpst = outpst.replace("\n"," \\ ")
                 self.connectivity.SendMessage("-> %s" % outpst, self.connectivity.Channel)
 
-            elif cmd.split(" ")[0] == "google":
+            elif cmd == "google":
                 # pygoogle module
                 try:
                     query = " ".join(cmd.split(" ")[1:])
@@ -171,6 +175,13 @@ class WorkerThread(Thread):
                         self.connectivity.SendMessage("-> %s" % sresults[s], self.connectivity.Channel)
                 except:
                     self.connectivity.SendMessage("-> %s" % "Googling error.", self.connectivity.Channel)
+            elif cmd in ['addpoll', 'votefor', 'delpoll']
+                if cmd == 'addpoll':
+                    ps.addpoll(cmd.split(" ")[1], cmd.split(" ")[2:])
+                elif cmd == 'votefor':
+                    ps.votefor(cmd.split(" ")[1], sender, cmd.split(" ")[2])
+                elif cmd == 'delpoll':
+                    ps.delpoll(cmd.split(" ")[1])
             else:
                 self.connectivity.SendMessage("%s is not implemented. Sorry." % cmd.split(" ")[0], self.connectivity.Channel)
         else:
